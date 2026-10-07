@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesin Kasir</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --ink:#17231f;
+  --paper:#fffdf8;
+  --green:#285f4b;
+  --green2:#3f8067;
+  --pink:#ef8eae;
+  --gold:#f3c85b;
+  --blue:#63b8cf;
+  --line:#26352f;
+  --screen:#21302b;
+  --screenText:#effff5;
+}
+body{
+  margin:0;
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(135deg,#f6f8f4,#eef4f0);
+}
+.app{
+  width:min(980px,94%);
+  margin:24px auto 40px;
+}
+h1{
+  margin:0 0 18px;
+  text-align:center;
+  font-size:38px;
+  letter-spacing:1px;
+  font-weight:1000;
+  color:#224d3f;
+  text-shadow:0 3px 0 #f7d877, 0 6px 18px rgba(34,66,54,.12);
+  position:relative;
+}
+h1 .title-pill{
+  display:inline-block;
+  padding:10px 24px 12px;
+  border:4px solid var(--line);
+  border-radius:999px;
+  background:linear-gradient(180deg,#fff6c9,#f3c85b);
+  box-shadow:0 8px 18px rgba(34,66,54,.10), inset 0 0 0 2px rgba(255,255,255,.45);
+}
+h1:before,h1:after{
+  content:"✦";
+  color:#ef8eae;
+  font-size:26px;
+  position:relative;
+  top:-3px;
+  margin:0 12px;
+}
+.layout{
+  display:grid;
+  grid-template-columns:270px 1fr;
+  gap:24px;
+  align-items:start;
+}
+.panel,.board{
+  background:rgba(255,255,255,.94);
+  border:1px solid #dbe4df;
+  border-radius:24px;
+  box-shadow:0 16px 45px rgba(34,66,54,.08);
+}
+.panel{
+  padding:20px;
+  position:relative;
+  overflow:hidden;
+}
+.panel:before{
+  content:"";
+  position:absolute;
+  right:-38px;
+  top:-38px;
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  background:radial-gradient(circle,#f9d980 0 35%, #ef8eae 36% 60%, transparent 61%);
+  opacity:.22;
+}
+.panel:after{
+  content:"";
+  position:absolute;
+  left:-28px;
+  bottom:-28px;
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  background:radial-gradient(circle,#63b8cf 0 40%, #dcefe5 41% 70%, transparent 71%);
+  opacity:.26;
+}
+.panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.panel-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:38px;
+  height:38px;
+  border-radius:12px;
+  background:linear-gradient(180deg,#fff4bf,#f3c85b);
+  border:3px solid var(--line);
+  font-size:18px;
+}
+.panel-strip{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:10px 0 16px;
+}
+.strip-chip{
+  background:#f5faf7;
+  border:2px dashed #c9d8d1;
+  border-radius:12px;
+  padding:7px 8px;
+  text-align:center;
+  font-size:12px;
+  font-weight:900;
+  color:#315f4c;
+}
+label{
+  display:block;
+  font-size:12px;
+  font-weight:800;
+  margin:14px 0 6px;
+}
+input[type=number]{
+  width:100%;
+  height:42px;
+  border:1px solid #ccd8d2;
+  border-radius:10px;
+  padding:0 11px;
+  font-size:14px;
+  background:#fff;
+}
+.run{
+  width:100%;
+  margin-top:20px;
+  border:0;
+  background:var(--ink);
+  color:white;
+  border-radius:11px;
+  padding:12px 10px;
+  font-weight:900;
+  cursor:pointer;
+}
+.board{
+  min-height:680px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+
+/* MESIN */
+.machine{
+  position:relative;
+  width:470px;
+  height:640px;
+  filter:drop-shadow(0 22px 18px rgba(31,55,45,.14));
+}
+.machine-shell{
+  position:absolute;
+  inset:38px 18px 10px;
+  background:linear-gradient(150deg,#3f8067,#285f4b);
+  border:4px solid var(--line);
+  border-radius:58px 58px 25px 25px;
+  overflow:hidden;
+}
+.machine-shell:before{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border:2px solid rgba(255,255,255,.23);
+  border-radius:49px 49px 18px 18px;
+}
+.crown{
+  position:absolute;
+  top:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:250px;
+  height:82px;
+  border:4px solid var(--line);
+  border-bottom:0;
+  border-radius:130px 130px 0 0;
+  background:var(--pink);
+  z-index:2;
+}
+.crown-inner{
+  position:absolute;
+  left:20px;
+  right:20px;
+  top:17px;
+  height:50px;
+  border-radius:70px 70px 0 0;
+  background:var(--gold);
+  border:3px solid var(--line);
+}
+.crown-text{
+  position:absolute;
+  top:27px;
+  left:0;
+  right:0;
+  text-align:center;
+  font-size:18px;
+  font-weight:1000;
+  color:var(--ink);
+  z-index:3;
+  letter-spacing:1px;
+}
+.light{
+  position:absolute;
+  top:13px;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:white;
+  border:2px solid var(--line);
+  z-index:4;
+}
+.l1{left:82px}.l2{left:101px}.l3{right:101px}.l4{right:82px}
+
+.lever{
+  position:absolute;
+  right:-2px;
+  top:160px;
+  width:38px;
+  height:130px;
+  background:#d87999;
+  border:4px solid var(--line);
+  border-left:0;
+  border-radius:0 18px 18px 0;
+  z-index:4;
+}
+.lever-stick{
+  position:absolute;
+  right:7px;
+  top:108px;
+  width:9px;
+  height:105px;
+  background:var(--gold);
+  border:4px solid var(--line);
+  border-radius:10px;
+  transform:rotate(18deg);
+  transform-origin:bottom;
+}
+.lever-ball{
+  position:absolute;
+  right:-2px;
+  top:86px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:var(--pink);
+  border:4px solid var(--line);
+  z-index:5;
+}
+
+/* PILIHAN KOMPOSISI DI DALAM MESIN */
+.order-box{
+  position:absolute;
+  left:80px;
+  right:80px;
+  top:96px;
+  height:46px;
+  background:#eef3ef;
+  border:4px solid var(--line);
+  border-radius:14px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5px;
+  padding:5px;
+  z-index:4;
+}
+.order-btn{
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:var(--ink);
+  font-size:15px;
+  font-weight:1000;
+  cursor:pointer;
+}
+.order-btn.active{
+  background:var(--gold);
+  box-shadow:inset 0 0 0 2px rgba(38,53,47,.18);
+}
+
+/* ALUR DI DALAM MESIN */
+.flow-window{
+  position:absolute;
+  left:54px;
+  right:54px;
+  top:160px;
+  height:380px;
+  background:#24312d;
+  border:5px solid var(--line);
+  border-radius:22px;
+  padding:14px 16px;
+  z-index:3;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.value-card{
+  width:82%;
+  min-height:52px;
+  background:var(--paper);
+  border:3px solid #1f2b27;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:9px 12px;
+  font-size:20px;
+  font-weight:1000;
+  transition:.25s;
+}
+.process-card{
+  width:68%;
+  min-height:50px;
+  border:3px solid var(--line);
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:8px 12px;
+  font-size:14px;
+  font-weight:1000;
+  transition:.25s;
+}
+.process-card.discount{
+  background:var(--gold);
+}
+.process-card.cut{
+  background:var(--pink);
+}
+.arrow{
+  width:3px;
+  height:18px;
+  background:#cfe0d8;
+  position:relative;
+}
+.arrow:after{
+  content:"";
+  position:absolute;
+  left:-5px;
+  bottom:-3px;
+  border-top:9px solid #cfe0d8;
+  border-left:6px solid transparent;
+  border-right:6px solid transparent;
+}
+.active-step{
+  transform:scale(1.035);
+  box-shadow:0 0 0 5px rgba(255,255,255,.10);
+}
+
+.buttons{
+  position:absolute;
+  left:90px;
+  right:90px;
+  top:558px;
+  display:flex;
+  justify-content:center;
+  gap:18px;
+  z-index:4;
+}
+.btn-light{
+  width:43px;
+  height:15px;
+  border-radius:999px;
+  border:3px solid var(--line);
+  background:var(--pink);
+}
+.btn-light:nth-child(2){background:var(--blue)}
+.btn-light:nth-child(3){background:#f0cf63}
+.drawer{
+  position:absolute;
+  left:82px;
+  right:82px;
+  bottom:24px;
+  height:40px;
+  background:#6caec0;
+  border:4px solid var(--line);
+  border-radius:9px;
+  z-index:3;
+}
+.drawer:after{
+  content:"";
+  position:absolute;
+  left:25%;
+  right:25%;
+  top:12px;
+  height:6px;
+  border-radius:9px;
+  background:#315d66;
+}
+.foot{
+  position:absolute;
+  left:80px;
+  right:80px;
+  bottom:0;
+  height:17px;
+  background:#17231f;
+  border-radius:50%;
+  z-index:1;
+}
+
+@media(max-width:820px){
+  .layout{grid-template-columns:1fr}
+  .board{min-height:650px}
+}
+@media(max-width:520px){
+  .machine{
+    transform:scale(.80);
+    transform-origin:top center;
+    margin-bottom:-125px;
+  }
+  .board{min-height:510px}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <h1><span class="title-pill">MESIN KASIR</span></h1>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="panel-head">
+        <div style="font-size:18px;font-weight:1000;color:#224d3f">INPUT</div>
+        <div class="panel-badge">🧾</div>
+      </div>
+      <div class="panel-strip">
+        <div class="strip-chip">Rp</div>
+        <div class="strip-chip">%</div>
+        <div class="strip-chip">−</div>
+      </div>
+
+      <label>Harga Awal</label>
+      <input id="harga" type="number" min="0" step="1000" value="300000">
+
+      <label>Diskon (%)</label>
+      <input id="diskon" type="number" min="0" max="100" step="1" value="20">
+
+      <label>Potongan</label>
+      <input id="potongan" type="number" min="0" step="1000" value="25000">
+
+      <button class="run" id="run">Jalankan Mesin</button>
+    </div>
+
+    <div class="board">
+      <div class="machine" id="machine">
+        <div class="foot"></div>
+        <div class="machine-shell"></div>
+
+        <div class="crown">
+          <div class="crown-inner"></div>
+          <div class="light l1"></div>
+          <div class="light l2"></div>
+          <div class="light l3"></div>
+          <div class="light l4"></div>
+          <div class="crown-text">MESIN KASIR</div>
+        </div>
+
+        <div class="lever"></div>
+        <div class="lever-stick"></div>
+        <div class="lever-ball"></div>
+
+        <div class="order-box">
+          <button class="order-btn active" id="gof">g ∘ f</button>
+          <button class="order-btn" id="fog">f ∘ g</button>
+        </div>
+
+        <div class="flow-window">
+          <div class="value-card" id="value1">Rp300.000</div>
+
+          <div class="arrow"></div>
+
+          <div class="process-card discount" id="process1">DISKON 20%</div>
+
+          <div class="arrow"></div>
+
+          <div class="value-card" id="value2">Rp240.000</div>
+
+          <div class="arrow"></div>
+
+          <div class="process-card cut" id="process2">POTONGAN Rp25.000</div>
+
+          <div class="arrow"></div>
+
+          <div class="value-card" id="value3">Rp215.000</div>
+        </div>
+
+        <div class="buttons">
+          <span class="btn-light"></span>
+          <span class="btn-light"></span>
+          <span class="btn-light"></span>
+        </div>
+
+        <div class="drawer"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let mode = "gof";
+
+function rupiah(n){
+  return "Rp" + Math.round(n).toLocaleString("id-ID");
+}
+
+function nilaiInput(){
+  return {
+    harga: Math.max(0, Number($("harga").value) || 0),
+    diskon: Math.min(100, Math.max(0, Number($("diskon").value) || 0)),
+    potongan: Math.max(0, Number($("potongan").value) || 0)
+  };
+}
+
+function diskonFn(x,d){
+  return x * (1 - d/100);
+}
+
+function potonganFn(x,p){
+  return Math.max(0, x - p);
+}
+
+function resetTampilan(){
+  const {harga,diskon,potongan}=nilaiInput();
+
+  $("value1").textContent=rupiah(harga);
+  $("value2").textContent="—";
+  $("value3").textContent="—";
+
+  if(mode==="gof"){
+    $("process1").textContent="DISKON " + diskon + "%";
+    $("process1").className="process-card discount";
+    $("process2").textContent="POTONGAN " + rupiah(potongan);
+    $("process2").className="process-card cut";
+  }else{
+    $("process1").textContent="POTONGAN " + rupiah(potongan);
+    $("process1").className="process-card cut";
+    $("process2").textContent="DISKON " + diskon + "%";
+    $("process2").className="process-card discount";
+  }
+}
+
+function setMode(next){
+  mode=next;
+  $("gof").classList.toggle("active", mode==="gof");
+  $("fog").classList.toggle("active", mode==="fog");
+  resetTampilan();
+}
+
+function clearActive(){
+  ["value1","process1","value2","process2","value3"]
+    .forEach(id => $(id).classList.remove("active-step"));
+}
+
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+let audioCtx;
+
+function getAudioCtx(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state === "suspended"){
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+function tone(freq, duration, type="sine", volume=0.08, delay=0){
+  const ctx = getAudioCtx();
+  const start = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(start);
+  osc.stop(start + duration + 0.02);
+}
+
+function soundScan(){
+  tone(1350, 0.07, "square", 0.055, 0);
+  tone(1750, 0.08, "square", 0.045, 0.075);
+}
+
+function soundProcess(){
+  tone(880, 0.055, "sine", 0.04, 0);
+}
+
+function soundResult(){
+  tone(1050, 0.08, "sine", 0.05, 0);
+  tone(1400, 0.09, "sine", 0.05, 0.09);
+}
+
+function soundCashDrawer(){
+  tone(720, 0.07, "triangle", 0.05, 0);
+  tone(980, 0.08, "triangle", 0.05, 0.08);
+  tone(1320, 0.16, "triangle", 0.06, 0.17);
+}
+
+async function runMachine(){
+  const {harga,diskon,potongan}=nilaiInput();
+
+  clearActive();
+  resetTampilan();
+
+  let tengah, akhir;
+
+  soundScan();
+  $("value1").classList.add("active-step");
+  await sleep(350);
+
+  soundProcess();
+  $("process1").classList.add("active-step");
+  await sleep(500);
+
+  if(mode==="gof"){
+    tengah=diskonFn(harga,diskon);
+  }else{
+    tengah=potonganFn(harga,potongan);
+  }
+
+  soundResult();
+  $("value2").textContent=rupiah(tengah);
+  $("value2").classList.add("active-step");
+  await sleep(550);
+
+  soundProcess();
+  $("process2").classList.add("active-step");
+  await sleep(500);
+
+  if(mode==="gof"){
+    akhir=potonganFn(tengah,potongan);
+  }else{
+    akhir=diskonFn(tengah,diskon);
+  }
+
+  soundCashDrawer();
+  $("value3").textContent=rupiah(akhir);
+  $("value3").classList.add("active-step");
+
+  $("machine").animate(
+    [{transform:"scale(1)"},{transform:"scale(1.012)"},{transform:"scale(1)"}],
+    {duration:300,easing:"ease-out"}
+  );
+}
+
+["harga","diskon","potongan"].forEach(id=>{
+  $(id).addEventListener("input", resetTampilan);
+});
+
+$("gof").onclick=()=>setMode("gof");
+$("fog").onclick=()=>setMode("fog");
+$("run").onclick=runMachine;
+
+resetTampilan();
+</script>
+</body>
+</html>
